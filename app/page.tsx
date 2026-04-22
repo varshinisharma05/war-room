@@ -9,7 +9,16 @@ import { Header } from '@/components/dashboard/Header'
 import { DateNavigator } from '@/components/dashboard/DateNavigator'
 import { Profile, DailyStats } from '@/lib/supabase/types'
 
+import { WeeklyDirectives } from '@/components/dashboard/WeeklyDirectives'
+
 export const dynamic = 'force-dynamic'
+
+function getMonday(d: string) {
+  const dt = new Date(d);
+  const day = dt.getDay(),
+      diff = dt.getDate() - day + (day == 0 ? -6: 1);
+  return new Date(dt.setDate(diff)).toISOString().split('T')[0];
+}
 
 export default async function DashboardPage({ searchParams }: { searchParams: { date?: string } }) {
   const supabase = await createClient()
@@ -24,14 +33,26 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
   const todayRaw = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' })
   const targetDate = searchParams.date || todayRaw
   const isHistory = targetDate !== todayRaw
+  const weekStartDate = getMonday(targetDate)
   
   const { data: currentStats } = await supabase
     .from('daily_stats')
     .select('*')
     .eq('date', targetDate)
 
+  const { data: weeklyGoals } = await supabase
+    .from('weekly_goals')
+    .select('*')
+    .eq('week_start_date', weekStartDate)
+
+  const { data: squadTopics } = await supabase
+    .from('squad_topics')
+    .select('*')
+    .eq('week_start_date', weekStartDate)
+
   const myProfile = profiles?.find(p => p.id === user.id)
   const myStats = currentStats?.find(s => s.user_id === user.id)
+  const squadTopic = squadTopics?.[0] || null
 
   const showMorningLockIn = !isHistory && (!myStats || (myStats.locked_goals || []).length === 0)
   const showRecoveryPlan = !isHistory && (myProfile?.current_status === 'Red')
@@ -47,7 +68,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
             
             <DateNavigator currentDate={targetDate} today={todayRaw} />
 
-            <div className="flex-1 flex flex-col xl:flex-row gap-6 h-full mt-6">
+            <div className="mt-6">
+              <WeeklyDirectives 
+                currentUserId={user.id} 
+                squadTopic={squadTopic} 
+                weeklyGoals={weeklyGoals || []} 
+                profiles={profiles || []} 
+                weekStartDate={weekStartDate}
+              />
+            </div>
+
+            <div className="flex-1 flex flex-col xl:flex-row gap-6 h-full mt-2">
               <div className="flex-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
                   {profiles?.map((profile: Profile) => {
@@ -82,7 +113,17 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
           
           <DateNavigator currentDate={targetDate} today={todayRaw} />
 
-          <div className="flex-1 flex flex-col xl:flex-row gap-6 h-full mt-6">
+          <div className="mt-6">
+            <WeeklyDirectives 
+              currentUserId={user.id} 
+              squadTopic={squadTopic} 
+              weeklyGoals={weeklyGoals || []} 
+              profiles={profiles || []} 
+              weekStartDate={weekStartDate}
+            />
+          </div>
+
+          <div className="flex-1 flex flex-col xl:flex-row gap-6 h-full mt-2">
             <div className="flex-1">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max">
                 {profiles?.map((profile: Profile) => {

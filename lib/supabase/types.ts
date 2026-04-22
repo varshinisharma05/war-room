@@ -35,3 +35,19 @@ export type Resource = {
   description: string;
   created_at: string;
 };
+
+export type WeeklyGoal = {
+  id: string;
+  user_id: string;
+  week_start_date: string;
+  goal_text: string;
+  created_at: string;
+};
+
+export type SquadTopic = {
+  id: string;
+  week_start_date: string;
+  topic_text: string;
+  created_at: string;
+};
+
