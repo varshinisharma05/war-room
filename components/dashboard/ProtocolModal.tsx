@@ -7,10 +7,8 @@ import { Button } from '@/components/ui/button'
 export function ProtocolModal() {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="hover:bg-primary/20 hover:text-primary transition-colors">
-          <Info className="w-6 h-6" />
-        </Button>
+      <DialogTrigger render={<Button variant="ghost" size="icon" className="hover:bg-primary/20 hover:text-primary transition-colors" />}>
+        <Info className="w-6 h-6" />
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] bg-background/95 backdrop-blur-md border-primary/50">
         <DialogHeader>
