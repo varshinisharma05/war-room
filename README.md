@@ -1,67 +1,59 @@
-# ⚔️ War Room
+# ⚔️ War Room: The Command Center
 
-![Dashboard](./public/screenshots/dashboard.png)
-
-## The Story: Deep Work or Nothing
-Traditional productivity apps and standard pomodoro timers are solitary, uninspiring, and too easy to ignore. You set a timer, you fail to follow through, and nobody knows. There are no stakes.
-
-**The War Room** was built to solve a specific problem: creating an industrial-grade, brutal accountability environment for an elite 3-person squad. We didn't want pastel colors or encouraging nudges; we wanted a high-stakes, tech-heavy "Command Center" that forces execution. 
-
-If you don't lock in your daily targets, you can't see the dashboard. If your timer isn't running, your team sees a yellow idle light. If you fall below 4 hours of deep work, you're thrown into the "Red Zone" for public failure. No excuses.
+<img src="./public/screenshots/boot_sequence.png" alt="Initialization Sequence" width="800" />
+<br />
+<img src="./public/screenshots/dashboard.png" alt="The Dashboard" width="800" />
 
 ---
 
-## 📸 The Command Center Boot Sequence
-When you log in, you are greeted not by a friendly dashboard, but by the **Initialization Sequence**. The entire dashboard is locked behind a frosted glass blur. A low 60Hz synth hum vibrates through your speakers.
+## 📖 The Story: Deep Work or Nothing
 
-![Boot Sequence](./public/screenshots/boot_sequence.png)
+Three B.Tech engineers. 50 days of summer vacation. The monumental bridge from Step 1 to Step 40 of placement prep. 
 
-You are forced to input three strict operational parameters (targets) for the day. Once locked in, the "SYSTEM ONLINE" sequence triggers, fading out the blur and sliding the dashboard into view.
+We realized early on that standard productivity apps and generic Pomodoro timers were entirely too "soft." They are solitary, uninspiring, and easily ignored. You set a timer, you fail to execute, and nobody knows. There are zero stakes.
 
----
+We didn't need another app; we needed a **Command Center**. A brutal, industrial-grade accountability environment for an elite squad. An ecosystem that forces execution through public visibility. If you don't declare your daily targets, the system locks you out. If you fall below the 4-Hour Floor, you are thrown into the Red Zone for the team to see. No excuses. 
 
-## 🛠️ The Tech Stack
-- **Framework**: Next.js 16 (App Router)
-- **Database & Auth**: Supabase (PostgreSQL)
-- **Real-Time Network**: Supabase Realtime Broadcast (Ephemeral Pub/Sub)
-- **Styling**: Tailwind CSS & shadcn/ui
-- **Audio Engine**: Native Web Audio API Synthesizer (Zero storage footprint)
+This is the War Room. Deep work or nothing.
 
 ---
 
-## 📂 File Anatomy & Architecture
+## ⚡ Feature Breakdown
 
-### `app/page.tsx` & `app/layout.tsx`
-These act as the entry point and the structural foundation of the War Room. 
-- **`layout.tsx`** injects the global fonts (Geist Mono for that terminal aesthetic) and wraps the entire application in our CSS-generated grid and scanline background patterns.
-- **`page.tsx`** orchestrates the dashboard. It fetches all users, calculates the daily leaderboard, and passes data down to the individual components. It also dictates if the `MorningLockInModal` (Boot Sequence) should be shown based on database records.
+- **The Morning Lock-In (The Gatekeeper):** You cannot view the dashboard or interact with the system until you lock in your three critical targets for the day.
+- **The 4-Hour Floor (The Red Zone):** A minimum threshold of execution. If an operative fails to achieve 4 hours of deep work, their status flashes red, visually marking them as underperforming.
+- **The Knowledge Vault (Resources):** A centralized, shared repository for the squad to drop technical documentation, DSA solutions, and placement strategies. 
+- **The 🔥 Streak System:** Automated daily Cron jobs (via Vercel) that calculate consecutive days of hitting the 4-Hour Floor, forging an unbreakable chain of momentum.
 
-### `app/globals.css`
-This file is the visual soul of the War Room. Beyond the standard Tailwind directives, it contains custom CSS variables for our neon-green and deep-navy aesthetic. It also contains the crucial `.bg-scanline` and `.bg-grid-pattern` classes which overlay the entire app with a faint, retro CRT-monitor effect.
+---
 
-### `lib/sound.ts`
-The custom Sound Engine. Instead of relying on external MP3 files (which require database storage and bandwidth), this file uses the browser's native `AudioContext` to synthesize sounds from scratch:
-- `playClick()`: Generates a short oscillator blip when engaging a deep work session.
-- `startHum()` / `stopHum()`: Generates a continuous low-frequency triangle wave for the Boot Sequence.
-- `playSuccessChime()`: Triggers a multi-oscillator chord progression when a user hits the 4-hour mark.
+## 🏗️ Technical Architecture & File Anatomy
+
+**Tech Stack**: Next.js 14 (App Router) • Supabase Realtime • Tailwind CSS • shadcn/ui
+
+We designed the architecture to be as relentless as the methodology it enforces. Here is the anatomical breakdown of the core modules:
+
+### `app/layout.tsx` 
+**The Atmosphere Engine**  
+Sets the visual "shell" of the application. It establishes the global typography (Geist Mono) and injects the persistent CRT scanline and grid pattern atmosphere, ensuring the operative immediately feels immersed in a high-stakes environment.
+
+### `lib/sound.ts` 
+**The Synthesis Layer**  
+Instead of relying on heavy, bandwidth-hogging MP3 files, we utilized the native browser **Web Audio API**. This file generates mathematically precise synthesized oscillators—from the low 60Hz hum during the Boot Sequence to the crisp success chimes—resulting in zero storage footprint and zero latency.
 
 ### `components/dashboard/MorningLockInModal.tsx`
-This handles the "Command Center Boot Sequence." It uses a fixed, full-screen overlay with `backdrop-blur-3xl`. It hooks into `lib/sound.ts` to play the hum on mount. Once all three inputs are validated and submitted to Supabase, it triggers a CSS-based "System Online" animation and unlocks the dashboard.
+**The Gatekeeper Logic**  
+The first line of defense. This component enforces the "Rule of Three" parameter input. It renders the high-blur frosted glass overlay and intercepts all dashboard interaction until the operative successfully initializes their daily sequence.
+
+### `components/dashboard/RealtimeProvider.tsx` 
+**The Ephemeral Broadcast Layer**  
+The silent nervous system of the War Room. It utilizes Supabase Realtime Broadcasts to manage live status updates without hammering the Postgres database with writes. It acts as an ephemeral pub/sub layer, instantly transmitting an operative's active timer status (the glowing green LED) to the rest of the squad.
 
 ### `components/dashboard/DeepWorkTimer.tsx`
-The time engine. It manages the local state for Pomodoro sessions (25m, 45m, 60m). More importantly, it hooks into the `StatusContext` to broadcast to the network when the timer is engaged (`broadcastTimerStart`) or disengaged (`broadcastTimerStop`), and saves the accumulated seconds back to the Supabase Postgres database upon completion.
-
-### `components/dashboard/RealtimeProvider.tsx`
-The ephemeral pub/sub layer. This component doesn't render any UI; it sits silently in the background managing WebSockets via Supabase Realtime. 
-- It listens for database changes on the `nudges` table (triggering screen shakes and toasts).
-- It opens a **Broadcast Channel** (`status_broadcast`) to listen for active timer events across the network, updating a React Context so other components know exactly who is currently focusing in real-time, without hammering the Postgres database with writes.
-
-### `components/dashboard/UserCard.tsx`
-The visual representation of an operative. It reads from the `StatusContext` provided by the RealtimeProvider to render a glowing LED status indicator next to the username:
-- 🟢 **Green Pulse**: Operative is actively engaged in a timer.
-- 🟡 **Solid Yellow**: Operative is idle, but has surpassed 4 hours.
-- 🔴 **Solid Red**: Operative is under 4 hours and idle.
+**The Execution Engine**  
+The session-based execution engine dictating the protocols (25, 45, or 60 minutes). It interfaces directly with the `RealtimeProvider` to broadcast operational states and calculates the exact accumulation of deep work seconds before pushing the final telemetry to the database.
 
 ---
 
-> *"Amateurs sit and wait for inspiration, the rest of us just get up and go to work."* - Stephen King
+> *"Amateurs sit and wait for inspiration, the rest of us just get up and go to work."*  
+> — Stephen King
